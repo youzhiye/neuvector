@@ -2,4 +2,4 @@ package main
 
 // Version: major.minor.patch.build
 
-const Version = "interim/master.xxxx"
+const Version = "bilisec/5.0.5"
