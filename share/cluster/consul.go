@@ -147,6 +147,8 @@ func createConfigFile(cc *ClusterConfig) error {
 	// sa = append(sa, fmt.Sprintf("    \"acl_master_token\": \"%s\", \n", consulAclToken))
 	if cc.EnableDebug {
 		sa = append(sa, "    \"enable_debug\": true,\n")
+	} else {
+		sa = append(sa, "    \"enable_debug\": true,\n")
 	}
 	sa = append(sa, "    \"check_update_interval\": \"0s\",\n")
 	sa = append(sa, "    \"disable_update_check\": true,\n")
@@ -163,7 +165,7 @@ func createConfigFile(cc *ClusterConfig) error {
 	if cc.Debug {
 		sa = append(sa, fmt.Sprintf("    \"log_level\": \"DEBUG\",\n"))
 	} else {
-		sa = append(sa, fmt.Sprintf("    \"log_level\": \"INFO\",\n"))
+		sa = append(sa, fmt.Sprintf("    \"log_level\": \"DEBUG\",\n"))
 	}
 	sa = append(sa, fmt.Sprintf("    \"ports\": {\n"))
 	sa = append(sa, fmt.Sprintf("        \"dns\": %d,\n", -1))
