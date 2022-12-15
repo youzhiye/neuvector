@@ -649,6 +649,9 @@ func hostUpdate(nType cluster.ClusterNotifyType, key string, value []byte) {
 								node := obj.(*resource.Node)
 								if node.Name == k8sName {
 									k8sCache.labels, k8sCache.annotations = node.Labels, node.Annotations
+									if k8sCache.k8sNodeName == "" {
+										k8sCache.k8sNodeName = node.Name
+									}
 									break
 								}
 							}
@@ -1150,12 +1153,17 @@ func setServiceAccount(node, wlID, wlName string, wlCache *workloadCache) {
 	if wlCache.serviceAccount == "" {
 		var podSAMap map[string]string
 		if podSAMap, _ = nodePodSAMap[node]; podSAMap == nil {
-			podSAMap = make(map[string]string, 1)
-			nodePodSAMap[node] = podSAMap
+			// if k8s node is named as IP, its node entry in nodePodSAMap has key as IP.
+			// because param(node) could be hostname, we try IP again when we cannot find the node entry using param(node)
+			if hostCache, ok := k8sHostInfoMap[node]; ok && hostCache.k8sNodeName != "" {
+				podSAMap, _ = nodePodSAMap[hostCache.k8sNodeName]
+			}
 		}
-		if sa, ok := podSAMap[wlID]; ok {
-			wlCache.serviceAccount = sa
-			delete(podSAMap, wlID)
+		if podSAMap != nil {
+			if sa, ok := podSAMap[wlID]; ok {
+				wlCache.serviceAccount = sa
+				delete(podSAMap, wlID)
+			}
 		}
 	}
 }
@@ -1230,7 +1238,7 @@ func mergeProbeCommands(cmds [][]string) []k8sProbeCmd {
 func addK8sPodEvent(pod resource.Pod) {
 	probes := mergeProbeCommands(append(pod.LivenessCmds, pod.ReadinessCmds...))
 	groupName := fmt.Sprintf("nv.%s.%s", pod.Name, pod.Domain)
-	if svc := global.ORCH.GetServiceFromPodLabels(pod.Domain, pod.Name, pod.Labels); svc != nil {
+	if svc := global.ORCH.GetServiceFromPodLabels(pod.Domain, pod.Name, pod.Node, pod.Labels); svc != nil {
 		groupName = api.LearnedGroupPrefix + utils.NormalizeForURL(utils.MakeServiceName(svc.Domain, svc.Name))
 	}
 

@@ -1524,7 +1524,7 @@ func (p *Probe) addContainerCandidate(proc *procInternal, scanMode bool) (*procC
 	id, containerInContainer, err, found := global.SYS.GetContainerIDByPID(proc.pid)
 	if !found {
 		if osutil.IsPidValid(proc.pid) {
-			log.WithFields(log.Fields{"error": err}).Error()
+			log.WithFields(log.Fields{"error": err}).Debug()
 		}
 		return nil, -1 // not ready
 	}
@@ -2828,7 +2828,8 @@ func (p *Probe) IsAllowedShieldProcess(id, mode, svcGroup string, proc *procInte
 
 	c, ok := p.containerMap[id]
 	if !ok {
-		mLog.WithFields(log.Fields{"proc": proc, "id": id}).Error("SHD: Unknown ID")
+		// the container was exited before we investigate into it
+		mLog.WithFields(log.Fields{"proc": proc, "id": id}).Debug("SHD: Unknown ID")
 		return true
 	}
 
