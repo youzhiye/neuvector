@@ -399,13 +399,21 @@ static pid_t fork_exec(int i)
         args[a] = NULL;
         break;
     case PROC_AGENT:
-        args[0] = g_procs[i].path;
+        // args[0] = g_procs[i].path;
+        args[0] = "/root/go/bin/dlv";
         if (g_mode == MODE_CTRL_AGENT) {
             args[1] = "-c";
             a = 2;
         } else {
             a = 1;
             if ((join = getenv(ENV_CLUSTER_JOIN)) != NULL) {
+                args[a ++] = "--headless=true";
+                args[a ++] = "--listen=:2345";
+                args[a ++] = "--api-version=2";
+                args[a ++] = "--accept-multiclient";
+                args[a ++] = "exec";
+                args[a ++] = g_procs[i].path;
+                args[a ++] = "--";
                 args[a ++] = "-j";
                 args[a ++] = join;
             }
