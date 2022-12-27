@@ -51,7 +51,7 @@ func containerdConnect(endpoint string, sys *system.SystemTools) (Runtime, error
 	log.WithFields(log.Fields{"endpoint": endpoint}).Debug("Connecting to containerd")
 
 	client, err := containerd.New(endpoint,
-		containerd.WithDefaultNamespace(k8sContainerdNamespace),
+		containerd.WithDefaultNamespace(defaultContainerdNamespace),
 		containerd.WithTimeout(clientConnectTimeout))
 	if err != nil {
 		log.WithFields(log.Fields{"error": err.Error()}).Error("")
@@ -195,7 +195,7 @@ func (d *containerdDriver) getSpecs(ctx context.Context, c containerd.Container)
 		}
 	}
 
-	status := &containerd.Status{	// unknown
+	status := &containerd.Status{ // unknown
 		Status:     containerd.Stopped,
 		ExitStatus: 0,
 		ExitTime:   time.Time{},
@@ -557,7 +557,7 @@ func (d *containerdDriver) reverseImageNameFromDigestName(digestName string) str
 	return ""
 }
 
-/// below structures are for decoding purpose only
+// / below structures are for decoding purpose only
 type containerdConfigMeta struct {
 	Name      string `json:"name"`
 	Uid       string `json:"uid"`
@@ -616,14 +616,14 @@ func (d *containerdDriver) GetContainerCriSupplement(id string) (*ContainerMetaE
 	pod, err := crt.PodSandboxStatus(ctx, &criRT.PodSandboxStatusRequest{PodSandboxId: id, Verbose: true})
 	if err == nil && pod != nil {
 		if pod.Status == nil || pod.Info == nil {
-			log.WithFields(log.Fields{"id":id, "pod": pod}).Error("Fail to get pod")
+			log.WithFields(log.Fields{"id": id, "pod": pod}).Error("Fail to get pod")
 			return nil, 0, "", 0, err
 		}
 
 		// a POD
 		meta = &ContainerMetaExtra{
-			CreatedAt:     time.Unix(0, pod.Status.CreatedAt),
-			Running:       pod.Status.State == criRT.PodSandboxState_SANDBOX_READY,
+			CreatedAt: time.Unix(0, pod.Status.CreatedAt),
+			Running:   pod.Status.State == criRT.PodSandboxState_SANDBOX_READY,
 		}
 		attempt = pod.Status.Metadata.Attempt
 		pid, _, _ = d.getContainerPid_CRI(pod.GetInfo())
@@ -636,8 +636,8 @@ func (d *containerdDriver) GetContainerCriSupplement(id string) (*ContainerMetaE
 		}
 
 		meta = &ContainerMetaExtra{
-			ExitCode:      int(cs.Status.ExitCode),
-			Running:       cs.Status.State == criRT.ContainerState_CONTAINER_RUNNING || cs.Status.State == criRT.ContainerState_CONTAINER_CREATED,
+			ExitCode: int(cs.Status.ExitCode),
+			Running:  cs.Status.State == criRT.ContainerState_CONTAINER_RUNNING || cs.Status.State == criRT.ContainerState_CONTAINER_CREATED,
 		}
 		attempt = cs.Status.Metadata.Attempt
 		pid, sandboxID, _ = d.getContainerPid_CRI(cs.GetInfo())
@@ -645,12 +645,12 @@ func (d *containerdDriver) GetContainerCriSupplement(id string) (*ContainerMetaE
 	return meta, pid, sandboxID, attempt, nil
 }
 
-///////
+// /////
 type criContainerInfoRes struct {
 	Info struct {
 		SandboxID string `json:"sandBoxID"`
-		Pid    int `json:"pid"`
-		Config struct {
+		Pid       int    `json:"pid"`
+		Config    struct {
 			MetaData struct {
 				Name string `json:"name"`
 			} `json:"metadata"`
